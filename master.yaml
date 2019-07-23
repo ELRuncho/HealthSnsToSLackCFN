@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: This template deploys a cloudwatch event, sns topci and lambda function in order to send AWS health alerts to slack
+Resources:
+
+  Security:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3-us-west-2.amazonaws.com/inmetsam-template/infrastructure/IAMSec/extractorIAM.yaml
+      Parameters:
+        EnvironmentName: !Ref AWS::StackName
+
+  EventAndTopic:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3-us-west-2.amazonaws.com/inmetsam-template/lambda/extractor.yaml
+      Parameters:
+        EnvironmentName: !Ref AWS::StackName
+        Role: !GetAtt ExtractorSecurity.Outputs.ExtractorRole
+        DestinationBucket: !GetAtt ExtractorStorage.Outputs.Bucket
+        SecGroups: !GetAtt ExtractorSecurity.Outputs.SecG
+        CodeBucket: config-bucket-us-west-2-051291311226
+        CodeKey: InMetAppTest2.zip
+
+  LambdaFunction:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3-us-west-2.amazonaws.com/inmetsam-template/lambda/grafanaLib.yaml
+      Parameters:
+        EnvironmentName: !Ref AWS::StackName
+        Role: !GetAtt ExtractorSecurity.Outputs.ExtractorRole
+        CodeBucket: config-bucket-us-west-2-051291311226
+        CodeKey: DashboardGenerator.zip
+        GrafanaKey: eyJrIjoibG1YQkhDcU1jWVQ5VG5xNm02ckZmc2dNTXM3UmloNnkiLCJuIjoiRGFzaGJvYXJkR2VuZXJhdG9yTGFtYmRhIiwiaWQiOjF9
+        GrafanaHost: http://grafanatest-1520355931.us-west-2.elb.amazonaws.com/
