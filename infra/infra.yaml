@@ -1,0 +1,117 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: This Template deploys all necesary roles for the lambda function as well as kms keys for encripting the webhooks
+Parameters:
+  EnvironmentName:
+    Description: An environment name that will prefix resource names
+    Type: String
+  Key:
+    Description: Key for taging the KMS key
+    Type: String
+    Default: "Project"
+  Value:
+    Description: Value for the tag Key
+    Type: String
+    Default: "AWSHealthAlertsToSlack"
+  
+Resources:
+  KmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: "Key for encription slack webhook in transit"
+      KeyPolicy: 
+        Version: "2012-10-17"
+        Id: "key-default-1"
+        Statement:
+          -
+            Sid: "Enable IAM User Permissions"
+            Effect: "Allow"
+            Principal: AWS: "arn:aws:iam::111122223333:root"
+            Action: "kms:*"
+            Resource: "*"
+          - 
+            Sid: "Allow administration of the key"
+            Effect: "Allow"
+            Principal: 
+              AWS: "arn:aws:iam::123456789012:user/Alice"
+            Action: 
+              - "kms:Create*"
+              - "kms:Describe*"
+              - "kms:Enable*"
+              - "kms:List*"
+              - "kms:Put*"
+              - "kms:Update*"
+              - "kms:Revoke*"
+              - "kms:Disable*"
+              - "kms:Get*"
+              - "kms:Delete*"
+              - "kms:ScheduleKeyDeletion"
+              - "kms:CancelKeyDeletion"
+            Resource: "*"
+          - 
+            Sid: "Allow use of the key"
+            Effect: "Allow"
+            Principal: 
+              AWS: "arn:aws:iam::123456789012:user/Bob"
+            Action: 
+              - "kms:DescribeKey"
+              - "kms:Encrypt"
+              - "kms:Decrypt"
+              - "kms:ReEncrypt*"
+              - "kms:GenerateDataKey"
+              - "kms:GenerateDataKeyWithoutPlaintext"
+            Resource: "*"
+      Tags:
+        - Key: !Ref Key
+          Value: !Ref Value
+
+  IAMPolicy:
+    Type: AWS::IAM::Policy
+    DependsOn:
+      - LambdaRole
+    Properties: 
+      PolicyName: "AWS_Health_Alerts_Lambda_Policy"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - 
+            Effect: "Allow"
+            Action:
+              - "logs:CreateLogStream"
+              - "logs:DescribeLogGroups"
+              - "logs:DescribeLogStreams"
+              - "logs:CreateLogGroup"
+              - "logs:PutLogEvents"
+            Resource: "*"
+          -
+            Effect: "Allow"
+            Action:
+              - "kms:Decrypt"
+              - "kms:Encrypt"
+            Resource: !GetAtt KmsKey.Arn 
+      Roles: 
+        - 
+          Ref: "LambdaRole"
+
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${EnvironmentName}-Role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - 
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+              Action:
+                - "sts:AssumeRole"
+
+Outputs:
+  Role:
+    Description: Execution role for the sns to slack lambda function
+    Value: !GetAtt LambdaRole.Arn
+  
+  Key:
+    Description: Arn of the kms key created
+    Value: !GetAtt KmsKey.Arn
