@@ -1,5 +1,13 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: This template deploys a cloudwatch event, sns topci and lambda function in order to send AWS health alerts to slack
+Parameters:
+  Key:
+    Description: Key for taging 
+    Type: String
+  Value:
+    Description: Value for the tag Key
+    Type: String
+
 Resources:
 
   Security:
@@ -8,6 +16,8 @@ Resources:
       TemplateURL: infra/infra.yaml
       Parameters:
         EnvironmentName: !Ref AWS::StackName
+        Key: !Ref Key
+        Value: !Ref Value
 
   EventAndTopic:
     Type: AWS::CloudFormation::Stack
