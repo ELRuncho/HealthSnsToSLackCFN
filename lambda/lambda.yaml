@@ -1,0 +1,68 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: This Template deploys a lambda function triggered by sns and forwards the notifiation to a slack channel
+Parameters:
+  EnvironmentName:
+    Description: An environment name that will prefix resource names
+    Type: String
+  SNSTopic:
+    Type: String
+  Role:
+    Type: String
+  SlackChannel:
+    Type: String
+  WebHook:
+    Type: String
+Resources:
+
+  LambdaFunction:
+    FunctionName: !Sub ${EnvironmentName}-Health-Alerts
+      Code:
+        ZipFile: |
+          import boto3
+          import json
+          import logging
+          import os
+          from base64 import b64decode
+          from urllib.request import Request, urlopen
+          from urllib.error import URLError, HTTPError
+          # The Slack channel to send a message to stored in the slackChannel environment variable
+          SLACK_CHANNEL = os.environ['slackChannel']
+          HOOK_URL = os.environ['kmsEncryptedHookUrl']
+          logger = logging.getLogger()
+          logger.setLevel(logging.INFO)
+          def lambda_handler(event, context):
+            logger.info("Event: " + str(event))
+            message = json.loads(event['Records'][0]['Sns']['Message'])
+            logger.info("Message: " + str(message))
+            account = message['account']
+            region = message['region']
+            eventType = message['detail']['eventTypeCode']
+            category = message['detail']['eventTypeCategory']
+            description = message['detail']['eventDescription'][0]['latestDescription']
+            slack_message = {
+              'channel': SLACK_CHANNEL,
+              'text': "AWS Health alert on account %s in region %s: \n  %s \n %s \n %s" % (account, region, eventType, category, description)
+            }
+            req = Request(HOOK_URL, json.dumps(slack_message).encode('utf-8'))
+            try:
+              response = urlopen(req)
+              response.read()
+              logger.info("Message posted to %s", slack_message['channel'])
+            except HTTPError as e:
+              logger.error("Request failed: %d %s", e.code, e.reason)
+            except URLError as e:
+              logger.error("Server connection failed: %s", e.reason)
+      Runtime: python3.7
+      Role: !Ref Role
+      Environment:
+        Variables:
+          slackChannel: !Ref SlackChannel
+          kmsEncryptedHookUrl: !Ref WebHook
+      Handler: "lambda_handler"
+  
+  Subscription:
+    Type: AWS::SNS::Subscription
+    Properties: 
+      Endpoint: !GetAtt LambdaFunction.Arn
+      Protocol: "lambda"
+      TopicArn: !Ref SNSTopic

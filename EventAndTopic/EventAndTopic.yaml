@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: This Template deploys all necesary roles for the lambda function as well as kms keys for encripting the webhooks
+Parameters:
+  EnvironmentName:
+    Description: An environment name that will prefix resource names
+    Type: String
+
+Resources:
+
+  SnsTopic:
+    Type: AWS::SNS::Topic
+    Properties: 
+      DisplayName: "AWS Health Notification"
+      Subscription: 
+        - Subscription
+      TopicName: !Sub ${EnvironmentName}_Health_Alert
+  
+  CloudwatchEvent:
+    Type: AWS::Events::Rule
+    Properties: 
+      Description: "Alerts of AWS maintenance windows for all the services"
+      EventPattern:
+        source:
+          - "aws.health"
+      Name: !Sub ${EnvironmentName}_Health_Alert
+      State: "ENABLED"
+      Targets: 
+        - 
+          Arn: !GetAtt SnsTopic.Arn
+
+Outputs:
+  SNSArn:
+    Description: Arn for the SNS topic that will triger the lambda function
+    Value: !GetAtt SnsTopic.Arn
+  
