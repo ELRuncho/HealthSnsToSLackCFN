@@ -32,7 +32,23 @@ Resources:
             Sid: "Allow administration of the key"
             Effect: "Allow"
             Principal: 
-              AWS: "arn:aws:iam::123456789012:user/Alice"
+              AWS: "arn:aws:iam::561850547660:root"
+            Action: 
+              - "kms:*"
+            Resource: "*"
+          - 
+            Sid: "Allow access for Key Administrators"
+            Effect: "Allow"
+            Principal: 
+              AWS: 
+                - "arn:aws:iam::561850547660:role/ngp-okta-sre-admin-role"
+                - "arn:aws:iam::561850547660:role/ngp-sre-elev-role"
+                - "arn:aws:iam::561850547660:role/ngp-okta-ce-admin-role"
+                - "arn:aws:iam::561850547660:role/ngp-ce-elev-role"
+                - "arn:aws:iam::561850547660:role/ngp-okta-ce-super-admin-role"
+                - "arn:aws:iam::561850547660:role/ngp-okta-infosec-infra-admin-role"
+                - "arn:aws:iam::561850547660:role/ngp-okta-sro-infra-admin-role"
+                - "arn:aws:iam::561850547660:role/OktaAdminRole"
             Action: 
               - "kms:Create*"
               - "kms:Describe*"
@@ -44,21 +60,10 @@ Resources:
               - "kms:Disable*"
               - "kms:Get*"
               - "kms:Delete*"
+              - "kms:TagResource"
+              - "kms:UntagResource"
               - "kms:ScheduleKeyDeletion"
               - "kms:CancelKeyDeletion"
-            Resource: "*"
-          - 
-            Sid: "Allow use of the key"
-            Effect: "Allow"
-            Principal: 
-              AWS: "arn:aws:iam::123456789012:user/Bob"
-            Action: 
-              - "kms:DescribeKey"
-              - "kms:Encrypt"
-              - "kms:Decrypt"
-              - "kms:ReEncrypt*"
-              - "kms:GenerateDataKey"
-              - "kms:GenerateDataKeyWithoutPlaintext"
             Resource: "*"
       Tags:
         - Key: !Ref Key
