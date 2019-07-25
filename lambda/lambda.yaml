@@ -60,6 +60,12 @@ Resources:
           kmsEncryptedHookUrl: !Ref WebHook
       Handler: "lambda_handler"
   
+  GrafanaLibLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${EnvironmentName}-Health-Alerts
+      RetentionInDays: 10
+
   Subscription:
     Type: AWS::SNS::Subscription
     Properties: 
