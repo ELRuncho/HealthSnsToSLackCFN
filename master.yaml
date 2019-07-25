@@ -32,16 +32,10 @@ Resources:
       Parameters:
         EnvironmentName: !Ref AWS::StackName
 
-        Role: !GetAtt ExtractorSecurity.Outputs.ExtractorRole
-        DestinationBucket: !GetAtt ExtractorStorage.Outputs.Bucket
-        SecGroups: !GetAtt ExtractorSecurity.Outputs.SecG
-        CodeBucket: config-bucket-us-west-2-051291311226
-        CodeKey: InMetAppTest2.zip
-
   LambdaFunction:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3-us-west-2.amazonaws.com/inmetsam-template/lambda/grafanaLib.yaml
+      TemplateURL: lambda/lambda.yaml
       Parameters:
         EnvironmentName: !Ref AWS::StackName
         Role: !GetAtt Security.Outputs.Role
