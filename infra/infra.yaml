@@ -7,7 +7,7 @@ Parameters:
   Key:
     Description: Key for taging the KMS key
     Type: String
-    Default: "Project"
+    Default: "Name"
   Value:
     Description: Value for the tag Key
     Type: String

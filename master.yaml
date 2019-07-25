@@ -7,6 +7,12 @@ Parameters:
   Value:
     Description: Value for the tag Key
     Type: String
+  SlackChannel:
+    Description: Name of the Channel where you want the alerts to be display
+    Type: String
+  WebHook:
+    Description: Slack's incoming webhook URL 
+    Type: String
 
 Resources:
 
@@ -22,9 +28,10 @@ Resources:
   EventAndTopic:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3-us-west-2.amazonaws.com/inmetsam-template/lambda/extractor.yaml
+      TemplateURL: EventAndTopic/EventAndTopic.yaml
       Parameters:
         EnvironmentName: !Ref AWS::StackName
+
         Role: !GetAtt ExtractorSecurity.Outputs.ExtractorRole
         DestinationBucket: !GetAtt ExtractorStorage.Outputs.Bucket
         SecGroups: !GetAtt ExtractorSecurity.Outputs.SecG
@@ -37,8 +44,8 @@ Resources:
       TemplateURL: https://s3-us-west-2.amazonaws.com/inmetsam-template/lambda/grafanaLib.yaml
       Parameters:
         EnvironmentName: !Ref AWS::StackName
-        Role: !GetAtt ExtractorSecurity.Outputs.ExtractorRole
-        CodeBucket: config-bucket-us-west-2-051291311226
-        CodeKey: DashboardGenerator.zip
-        GrafanaKey: eyJrIjoibG1YQkhDcU1jWVQ5VG5xNm02ckZmc2dNTXM3UmloNnkiLCJuIjoiRGFzaGJvYXJkR2VuZXJhdG9yTGFtYmRhIiwiaWQiOjF9
-        GrafanaHost: http://grafanatest-1520355931.us-west-2.elb.amazonaws.com/
+        Role: !GetAtt Security.Outputs.Role
+        KmsKey: !GetAtt Security.Outputs.Key
+        SNSTopic: !GetAtt EventAndTopic.Outputs.SNSArn
+        SlackChannel: !Ref SlackChannel
+        WebHook: !Ref WebHook
