@@ -4,14 +4,6 @@ Parameters:
   EnvironmentName:
     Description: An environment name that will prefix resource names
     Type: String
-  Key:
-    Description: Key for taging the KMS key
-    Type: String
-    Default: "Name"
-  Value:
-    Description: Value for the tag Key
-    Type: String
-    Default: "AWSHealthAlertsToSlack"
   
 Resources:
   KmsKey:
@@ -22,17 +14,13 @@ Resources:
         Version: "2012-10-17"
         Id: "key-default-1"
         Statement:
-          -
-            Sid: "Enable IAM User Permissions"
-            Effect: "Allow"
-            Principal: AWS: "arn:aws:iam::111122223333:root"
-            Action: "kms:*"
-            Resource: "*"
           - 
             Sid: "Allow administration of the key"
             Effect: "Allow"
             Principal: 
-              AWS: "arn:aws:iam::561850547660:root"
+              AWS: 
+                - "arn:aws:iam::561850547660:root"
+                - "arn:aws:iam::561850547660:role/ngp-sre-elev-role"
             Action: 
               - "kms:*"
             Resource: "*"
@@ -65,9 +53,6 @@ Resources:
               - "kms:ScheduleKeyDeletion"
               - "kms:CancelKeyDeletion"
             Resource: "*"
-      Tags:
-        - Key: !Ref Key
-          Value: !Ref Value
 
   IAMPolicy:
     Type: AWS::IAM::Policy
@@ -97,6 +82,25 @@ Resources:
         - 
           Ref: "LambdaRole"
 
+  LambdaRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement:
+          - 
+            Effect: "Allow"
+            Principal:
+              Service
+      ManagedPolicyArns:
+        - String
+      MaxSessionDuration: Integer
+      Path: String
+      PermissionsBoundary: String
+      Policies:
+        - Policy
+      RoleName: !Sub ${EnvironmentName}-Role
+  
   LambdaRole:
     Type: AWS::IAM::Role
     Properties:

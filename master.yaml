@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: This template deploys a cloudwatch event, sns topci and lambda function in order to send AWS health alerts to slack
+Description: This template deploys a cloudwatch event, sns topic and lambda function in order to send AWS health alerts to a slack channel
 Parameters:
   Key:
     Description: Key for taging 
